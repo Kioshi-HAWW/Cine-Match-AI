@@ -1,0 +1,26 @@
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pkl
+
+# Frontend/Node
+node_modules/
+dist/
+.vite/
+
+# Environments and OS
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.DS_Store
+Thumbs.db
+
+# Large Data & Archives
+archive.zip
+data/

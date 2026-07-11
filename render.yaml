@@ -1,0 +1,24 @@
+services:
+  - type: web_service
+    name: cine-match-ai-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python -m app.models.train_collaborative && python -m app.models.train_content
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATA_DIR
+        value: archive/ml-latest-small
+      - key: MODELS_DIR
+        value: trained_models
+      - key: BACKEND_CORS_ORIGINS
+        value: https://cine-match-ai.onrender.com
+
+  - type: static_site
+    name: cine-match-ai
+    env: static
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    publishPath: frontend/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://cine-match-ai-backend.onrender.com/api

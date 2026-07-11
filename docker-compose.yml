@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: movie-recommendation-backend
+    environment:
+      - DATA_DIR=${DATA_DIR:-/app/archive/ml-latest-small}
+      - MODELS_DIR=${MODELS_DIR:-/app/trained_models}
+      - FASTAPI_APP=app.main:app
+      - PORT=${PORT:-8000}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+    ports:
+      - '${PORT:-8000}:8000'
+    volumes:
+      - ./archive:/app/archive:ro
+      - ./trained_models:/app/trained_models:ro
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-/api}
+    container_name: movie-recommendation-frontend
+    ports:
+      - '3000:80'
+    depends_on:
+      - backend
+    restart: unless-stopped

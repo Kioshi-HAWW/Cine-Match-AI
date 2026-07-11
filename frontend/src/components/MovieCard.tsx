@@ -1,0 +1,35 @@
+import type { PopularMovie } from '../types'
+
+export default function MovieCard({ movie }: { movie: PopularMovie }) {
+  return (
+    <article className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-slate-950/20">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="min-w-[150px] overflow-hidden rounded-3xl bg-slate-800">
+          <div className="aspect-[2/3] bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 p-4">
+            <div className="h-full w-full rounded-2xl bg-slate-950" />
+          </div>
+        </div>
+        <div className="flex-1 space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-semibold text-white">{movie.title}</h2>
+            {movie.weighted_rating !== undefined ? (
+              <span className="rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                Rating {movie.weighted_rating.toFixed(2)}
+              </span>
+            ) : null}
+          </div>
+          <p className="text-sm leading-6 text-slate-300">{movie.overview || 'No overview available.'}</p>
+          <div className="flex flex-wrap gap-2">
+            {movie.genres?.split('|').map(genre =>
+              genre ? (
+                <span key={genre} className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300">
+                  {genre}
+                </span>
+              ) : null,
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+  )
+}
