@@ -8,7 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import router
 
-BASE_CORS_ORIGINS = os.environ.get("BACKEND_CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+BASE_CORS_ORIGINS = os.environ.get(
+    "BACKEND_CORS_ORIGINS",
+    "https://cine-match-ai-frontend.onrender.com,http://localhost:5173,http://localhost:3000,http://127.0.0.1:3000",
+)
 ORIGINS: List[str] = [origin.strip() for origin in BASE_CORS_ORIGINS.split(",") if origin.strip()]
 
 app = FastAPI(
