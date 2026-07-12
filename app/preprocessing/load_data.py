@@ -85,15 +85,35 @@ def load_movielens_data(data_dir: Optional[Path] = None) -> Dict[str, pd.DataFra
     Returns:
         Dictionary containing DataFrames for movies, ratings, tags, and links.
     """
-    root = get_data_root(data_dir)
+    # Resolve relative paths against the project root (two levels above this file)
+    PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    if data_dir is not None:
+        resolved = Path(data_dir)
+        if not resolved.is_absolute():
+            resolved = PROJECT_ROOT / resolved
+    else:
+        resolved = PROJECT_ROOT / "archive" / "ml-latest-small"
+
+    root = resolved
     movielens_dir = root / "movielens"
     if not movielens_dir.exists():
         movielens_dir = root
 
-    return {
-        name: _load_csv(movielens_dir / f"{name}.csv", columns, required=True)
-        for name, columns in MOVIELENS_FILE_COLUMNS.items()
-    }
+    # movies and ratings are required; tags and links are optional
+    required_files = {"movies": MOVIELENS_FILE_COLUMNS["movies"], "ratings": MOVIELENS_FILE_COLUMNS["ratings"]}
+    optional_files = {"tags": MOVIELENS_FILE_COLUMNS["tags"], "links": MOVIELENS_FILE_COLUMNS["links"]}
+
+    result: Dict[str, pd.DataFrame] = {}
+    for name, columns in required_files.items():
+        df = _load_csv(movielens_dir / f"{name}.csv", columns, required=True)
+        if df is not None:
+            result[name] = df
+    for name, columns in optional_files.items():
+        df = _load_csv(movielens_dir / f"{name}.csv", columns, required=False)
+        if df is not None:
+            result[name] = df
+
+    return result
 
 
 def load_tmdb_data(data_dir: Optional[Path] = None) -> Dict[str, pd.DataFrame]:

@@ -19,7 +19,7 @@ def _load_movie_and_rating_data(data_dir: Path) -> Tuple[pd.DataFrame, pd.DataFr
 
     movies["title"] = movies["title"].fillna("").astype(str)
     movies["genres"] = movies["genres"].fillna("").astype(str)
-    movies["overview"] = movies.get("overview", "").fillna("").astype(str)
+    movies["overview"] = movies["overview"].fillna("").astype(str) if "overview" in movies.columns else ""
 
     if "timestamp" in ratings.columns:
         ratings["timestamp"] = pd.to_datetime(ratings["timestamp"], unit="s", errors="coerce")

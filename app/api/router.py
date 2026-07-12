@@ -38,7 +38,10 @@ def _load_movies() -> pd.DataFrame:
     movies = load_movielens_data(DEFAULT_DATA_DIR)["movies"].copy()
     movies["title"] = movies["title"].fillna("").astype(str)
     movies["genres"] = movies["genres"].fillna("").astype(str)
-    movies["overview"] = movies.get("overview", "").fillna("").astype(str)
+    if "overview" not in movies.columns:
+        movies["overview"] = ""
+    else:
+        movies["overview"] = movies["overview"].fillna("").astype(str)
     return movies
 
 
