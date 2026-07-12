@@ -1,92 +1,363 @@
-# Movie Recommendation System
+# 🎬 CineMatch AI - Movie Recommendation System
 
-This project uses MovieLens CSV files and optional Kaggle movie metadata to build a local movie recommender.
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
+![React](https://img.shields.io/badge/React-Frontend-61DAFB)
+![Render](https://img.shields.io/badge/Deployment-Render-purple)
+![License](https://img.shields.io/badge/License-MIT-orange)
 
-## Files
+An AI-powered hybrid movie recommendation system built using **FastAPI**, **React**, **MovieLens Dataset**, and **Machine Learning**.
 
-- `movie.py` - recommender implementation
-- `requirements.txt` - Python dependencies
-- `archive/ml-latest-small/` - MovieLens dataset files (`movies.csv`, `ratings.csv`, `tags.csv`, `links.csv`)
+The system combines **Content-Based Filtering**, **Collaborative Filtering**, and **Popularity-Based Recommendations** to provide personalized movie suggestions.
 
-## Features
+---
 
-- Content-based recommendations from user interest text
-- Collaborative filtering using `surprise.SVD`, `surprise.NMF`, `surprise.KNNBasic`
-- Fallback recommendations based on top-rated movies
-- Optional Kaggle metadata enrichment when `movies_metadata.csv` is available
-- Hybrid recommendation support combining content and collaborative scores
+# 🚀 Live Demo
 
-## Setup
+### 🌐 Frontend
+**https://cine-match-ai-frontend.onrender.com**
 
-Create and activate a Python environment, then install dependencies:
+### ⚡ Backend API
+**https://cine-match-ai-v2.onrender.com**
+
+### 📚 API Documentation
+**https://cine-match-ai-v2.onrender.com/docs**
+
+---
+
+# 📸 Project Screenshots
+
+## 🏠 Frontend
+
+![Home Page](images/frontend-home.png)
+
+---
+
+## 🎯 Recommendation Results
+
+![Recommendations](images/frontend-results.png)
+
+---
+
+## ⚙️ Backend API (Swagger)
+
+![Swagger](images/backend-swagger.png)
+
+---
+
+## ☁️ Backend on Render
+
+![Backend Render](images/render-backend.png)
+
+---
+
+## 🌍 Frontend on Render
+
+![Frontend Render](images/render-frontend.png)
+
+---
+
+# ✨ Features
+
+- 🎬 Content-Based Movie Recommendations
+- 🤝 Collaborative Filtering (SVD, NMF, KNN)
+- ⭐ Popular Movie Fallback System
+- 📝 TF-IDF Based Interest Search
+- 🖼️ Movie Posters Support
+- 📖 Movie Overview Support
+- ⚡ FastAPI REST API
+- 🎨 React Frontend
+- ☁️ Fully Deployed on Render
+- 📚 Interactive Swagger Documentation
+
+---
+
+# 📂 Project Structure
+
+```
+Cine-Match-AI
+│
+├── app/
+│   ├── api/
+│   ├── models/
+│   ├── services/
+│   └── main.py
+│
+├── frontend/
+│   ├── src/
+│   └── public/
+│
+├── archive/
+│   └── ml-latest-small/
+│
+├── trained_models/
+│
+├── requirements.txt
+├── render.yaml
+└── README.md
+```
+
+---
+
+# 🧠 Recommendation Models
+
+### Content-Based Filtering
+
+Uses:
+
+- Movie Genres
+- TF-IDF Vectorization
+- Cosine Similarity
+
+Recommend movies based on user interests like:
+
+```
+Adventure
+Sci-Fi
+Fantasy
+Action
+Comedy
+```
+
+---
+
+### Collaborative Filtering
+
+Implemented using **scikit-surprise**
+
+Available Models:
+
+- SVD
+- NMF
+- KNNBasic
+
+Predicts movies users may enjoy based on historical ratings.
+
+---
+
+### Hybrid Recommendation
+
+Combines
+
+- Content Similarity
+- Collaborative Filtering
+- Popularity Ranking
+
+for better recommendation quality.
+
+---
+
+# 📦 Dataset
+
+Uses the **MovieLens Small Dataset**
+
+Included files:
+
+```
+movies.csv
+ratings.csv
+tags.csv
+links.csv
+```
+
+Optionally supports:
+
+```
+movies_metadata.csv
+```
+
+for
+
+- Movie Overview
+- Poster
+- Runtime
+- Release Date
+- Additional Metadata
+
+---
+
+# ⚙️ Installation
+
+Clone the repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/Cine-Match-AI.git
+
+cd Cine-Match-AI
+```
+
+Create virtual environment
 
 ```bash
 python -m venv .venv
-.\.venv\Scripts\activate
+```
+
+Activate
+
+Windows
+
+```bash
+.venv\Scripts\activate
+```
+
+Linux/Mac
+
+```bash
+source .venv/bin/activate
+```
+
+Install dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+---
 
-Run the recommender from the project folder:
+# ▶️ Usage
 
-```bash
-python movie.py --interest "adventure fantasy" --top-n 10
-```
-
-For collaborative recommendations by user ID:
+Content Recommendation
 
 ```bash
-python movie.py --user-id 1 --top-n 10 --model SVD
+python movie.py --interest "science fiction" --top-n 10
 ```
 
-If you have Kaggle metadata available, include it:
+Collaborative Recommendation
 
 ```bash
-python movie.py --interest "science fiction" --top-n 10 --kaggle-metadata path\to\movies_metadata.csv
+python movie.py --user-id 1 --model SVD --top-n 10
 ```
 
-If interest is weak or not provided, the fallback top-rated movies are returned.
+Using Kaggle Metadata
 
-## Notes
+```bash
+python movie.py --interest "adventure fantasy" --top-n 10 --kaggle-metadata path/to/movies_metadata.csv
+```
 
-- `scikit-surprise` is required for collaborative filtering.
-- The recommender uses the local archive dataset by default.
+---
 
-## Render Deployment
+# 🌐 Render Deployment
 
-This repository includes a `render.yaml` configuration for deploying the FastAPI backend and React frontend as separate services on Render's free tier.
+This repository includes a complete **render.yaml** configuration for deploying:
 
-### Render environment variables
+- FastAPI Backend
+- React Frontend
 
-The configurations are defined in the `render.yaml` blueprint. If deploying manually or verifying settings, use these values (also provided in `render.env.example`):
+as independent Render services.
 
-- **Backend Service (`cine-match-ai-backend`)**:
-  - `DATA_DIR=archive/ml-latest-small`
-  - `MODELS_DIR=trained_models`
-  - `BACKEND_CORS_ORIGINS=https://cine-match-ai.onrender.com` (change this if you use a custom domain)
-- **Frontend Static Site (`cine-match-ai`)**:
-  - `VITE_API_BASE_URL=https://cine-match-ai-backend.onrender.com/api`
+---
 
-### Production build & startup commands
+## Backend Environment Variables
 
-- **Backend Web Service**:
-  - **Build Command**: `pip install -r requirements.txt && python -m app.models.train_collaborative && python -m app.models.train_content` (automatically installs requirements, trains SVD/NMF/KNN models, and generates the TF-IDF vocabulary on the build server).
-  - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- **Frontend Static Site**:
-  - **Build Command**: `cd frontend && npm install && npm run build`
-  - **Publish Path**: `frontend/dist`
+```
+DATA_DIR=archive/ml-latest-small
 
-### Deployment steps
+MODELS_DIR=trained_models
 
-1. Push your repository to GitHub.
-2. Log in to [Render](https://dashboard.render.com/).
-3. Click **New** -> **Blueprint**.
-4. Connect your GitHub repository.
-5. Render will automatically read the `render.yaml` configuration. Review the plan and click **Apply**.
-6. Once deployed, the frontend will be served at `https://cine-match-ai.onrender.com` and the API at `https://cine-match-ai-backend.onrender.com`.
+BACKEND_CORS_ORIGINS=https://YOUR-FRONTEND.onrender.com
+```
 
-### Free Render optimizations
+---
 
-- **Low-Memory Similarity calculations**: The backend utilizes an optimized content recommender that calculates movie similarity on-the-fly. This keeps the application memory footprint under **100MB** during runtime, completely avoiding Out-of-Memory (OOM) crashes on the 512MB free tier instance.
-- **Build-time Training**: Pre-training models on Render's build server ensures the deployment is fully automated and self-contained, without having to commit or push large model pickle files to Git.
+## Frontend Environment Variable
+
+```
+VITE_API_BASE_URL=https://YOUR-BACKEND.onrender.com/api
+```
+
+---
+
+# 🚀 Production Commands
+
+## Backend
+
+Build
+
+```bash
+pip install -r requirements.txt
+
+python -m app.models.train_collaborative
+
+python -m app.models.train_content
+```
+
+Start
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+---
+
+## Frontend
+
+Build
+
+```bash
+cd frontend
+
+npm install
+
+npm run build
+```
+
+Publish Directory
+
+```
+frontend/dist
+```
+
+---
+
+# ☁️ Deployment
+
+1. Push project to GitHub
+2. Login to Render
+3. Create New Blueprint
+4. Connect Repository
+5. Render automatically detects **render.yaml**
+6. Deploy
+
+---
+
+# ⚡ Free Tier Optimizations
+
+✅ Build-time ML Model Training
+
+✅ Lightweight TF-IDF Similarity
+
+✅ Memory Optimized (<100 MB)
+
+✅ No Large Pickle Files in Git
+
+✅ Automatic Deployment
+
+---
+
+# 🛠️ Built With
+
+- Python
+- FastAPI
+- React
+- Scikit-Learn
+- Scikit-Surprise
+- Pandas
+- NumPy
+- MovieLens Dataset
+- Render
+
+---
+
+# 📄 License
+
+This project is intended for educational and learning purposes.
+
+---
+
+# 👨‍💻 Author
+
+**Udit Narayan Rout**
+
+Computer Science Engineering
+
+VIT Bhopal
