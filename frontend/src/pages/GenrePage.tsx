@@ -11,8 +11,8 @@ export default function GenrePage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchJson('/genres')
-      .then(data => setGenres(data.map((item: { name: string }) => item.name)))
+    fetchJson<Array<{ name: string }>>('/genres')
+      .then((data: Array<{ name: string }>) => setGenres(data.map((item) => item.name)))
       .catch(() => setGenres([]))
   }, [])
 

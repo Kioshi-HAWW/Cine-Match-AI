@@ -15,8 +15,8 @@ export default function PopularPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchJson('/popular')
-      .then(setData)
+    fetchJson<PopularData>('/popular')
+      .then((data: PopularData) => setData(data))
       .catch(err => setError(err instanceof Error ? err.message : 'Unable to load popular movies'))
       .finally(() => setLoading(false))
   }, [])
