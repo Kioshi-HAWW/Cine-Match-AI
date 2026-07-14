@@ -13,6 +13,7 @@ from app.popularity import calculate_popularity_scores, most_rated_movies, top_r
 from app.preprocessing.load_data import load_movielens_data
 from app.preprocessing.metadata import load_enriched_movielens_movies
 from app.recommender import ContentRecommender, HybridRecommender, InterestRecommender
+from app.utils.wikipedia import fill_missing_with_wikipedia
 from app.api.schemas import (
     GenreSchema,
     MovieSchema,
@@ -101,9 +102,12 @@ def get_popular(
 ) -> Dict[str, List[Dict[str, Any]]]:
     popularity = calculate_popularity_scores(DEFAULT_DATA_DIR, top_percentile=top_percentile)
     return {
-        "top_rated": top_rated_movies(popularity, top_n=top_n),
-        "trending": trending_movies(popularity, _RATINGS_DF, top_n=top_n, recent_percentile=recent_percentile),
-        "most_rated": most_rated_movies(popularity, top_n=top_n),
+        "top_rated": [fill_missing_with_wikipedia(movie) for movie in top_rated_movies(popularity, top_n=top_n)],
+        "trending": [
+            fill_missing_with_wikipedia(movie)
+            for movie in trending_movies(popularity, _RATINGS_DF, top_n=top_n, recent_percentile=recent_percentile)
+        ],
+        "most_rated": [fill_missing_with_wikipedia(movie) for movie in most_rated_movies(popularity, top_n=top_n)],
     }
 
 
@@ -124,14 +128,16 @@ def recommend_movie(request: RecommendMovieRequest) -> RecommendationResponse:
 
     return {
         "recommendations": [
-            {
-                "title": rec.title,
-                "genres": rec.genres,
-                "overview": rec.overview,
-                "poster_path": rec.poster_path,
-                "poster_url": rec.poster_path,
-                "similarity_score": rec.similarity_score,
-            }
+            fill_missing_with_wikipedia(
+                {
+                    "title": rec.title,
+                    "genres": rec.genres,
+                    "overview": rec.overview,
+                    "poster_path": rec.poster_path,
+                    "poster_url": rec.poster_path,
+                    "similarity_score": rec.similarity_score,
+                }
+            )
             for rec in movies
         ]
     }
@@ -153,14 +159,20 @@ def recommend_interest(request: RecommendInterestRequest) -> RecommendationRespo
         raise HTTPException(status_code=503, detail=str(exc))
 
     return {"recommendations": [
-        {
-            "title": movie["title"],
-            "genres": movie["genres"],
-            "overview": movie.get("overview", ""),
-            "poster_path": movie.get("poster_path"),
-            "poster_url": movie.get("poster_url") or movie.get("poster_path"),
-            "similarity_score": movie.get("similarity_score"),
-        }
+        fill_missing_with_wikipedia(
+            {
+                "title": movie["title"],
+                "genres": movie["genres"],
+                "overview": movie.get("overview", ""),
+                "poster_path": movie.get("poster_path"),
+                "poster_url": movie.get("poster_url") or movie.get("poster_path"),
+                "runtime": movie.get("runtime"),
+                "release_date": movie.get("release_date"),
+                "vote_average": movie.get("vote_average"),
+                "imdb_id": movie.get("imdb_id"),
+                "similarity_score": movie.get("similarity_score"),
+            }
+        )
         for movie in movies
     ]}
 
@@ -212,7 +224,7 @@ def recommend_user(request: RecommendUserRequest) -> RecommendationResponse:
         )
 
     top_predictions = sorted(predictions, key=lambda item: item["predicted_rating"], reverse=True)[: request.top_n]
-    return {"recommendations": top_predictions}
+    return {"recommendations": [fill_missing_with_wikipedia(movie) for movie in top_predictions]}
 
 
 @router.post(
@@ -234,4 +246,4 @@ def recommend_hybrid(request: RecommendHybridRequest) -> RecommendationResponse:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    return {"recommendations": movies}
+    return {"recommendations": [fill_missing_with_wikipedia(movie) for movie in movies]}

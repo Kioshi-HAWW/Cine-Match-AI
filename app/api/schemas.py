@@ -16,6 +16,8 @@ class MovieSchema(BaseModel):
     release_date: Optional[str] = Field(None, description="Release date if available")
     vote_average: Optional[float] = Field(None, description="External metadata average vote if available")
     imdb_id: Optional[str] = Field(None, description="IMDb identifier if available")
+    wikipedia_title: Optional[str] = Field(None, description="Wikipedia page title used for fallback metadata")
+    wikipedia_url: Optional[str] = Field(None, description="Wikipedia page URL used for fallback metadata")
 
 
 class GenreSchema(BaseModel):
@@ -37,6 +39,8 @@ class PopularMovieSchema(BaseModel):
     release_date: Optional[str] = None
     vote_average: Optional[float] = None
     imdb_id: Optional[str] = None
+    wikipedia_title: Optional[str] = None
+    wikipedia_url: Optional[str] = None
 
 
 class PopularResponse(BaseModel):
@@ -55,6 +59,8 @@ class RecommendationMovieSchema(BaseModel):
     release_date: Optional[str] = None
     vote_average: Optional[float] = None
     imdb_id: Optional[str] = None
+    wikipedia_title: Optional[str] = None
+    wikipedia_url: Optional[str] = None
     similarity_score: Optional[float] = None
     predicted_rating: Optional[float] = None
     content_score: Optional[float] = None

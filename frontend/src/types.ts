@@ -9,6 +9,8 @@ export interface MovieItem {
   release_date?: string | null
   vote_average?: number | null
   imdb_id?: string | null
+  wikipedia_title?: string | null
+  wikipedia_url?: string | null
 }
 
 export interface PopularMovie extends MovieItem {

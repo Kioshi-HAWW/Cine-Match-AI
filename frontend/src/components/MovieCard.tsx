@@ -32,6 +32,11 @@ export default function MovieCard({ movie }: { movie: PopularMovie }) {
             {movie.release_date ? <span>Released {movie.release_date}</span> : null}
             {movie.runtime ? <span>{Math.round(movie.runtime)} min</span> : null}
             {movie.imdb_id ? <span>IMDb {movie.imdb_id}</span> : null}
+            {movie.wikipedia_url ? (
+              <a href={movie.wikipedia_url} target="_blank" rel="noreferrer" className="text-sky-300 hover:text-sky-200">
+                Wikipedia
+              </a>
+            ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
             {movie.genres?.split('|').map(genre =>
