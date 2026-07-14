@@ -160,19 +160,28 @@ tags.csv
 links.csv
 ```
 
-Optionally supports:
+Optionally supports a TMDb/IMDb-style metadata CSV. Place it beside the MovieLens files or in an `archive/ml-latest-small/tmdb/` folder as:
 
 ```
 movies_metadata.csv
 ```
 
-for
+The backend joins MovieLens `links.csv` (`movieId`/`tmdbId`) to metadata `id`, `tmdbId`, or `tmdb_id` and returns enriched recommendation fields:
 
 - Movie Overview
-- Poster
+- Poster URL (`poster_path` / `poster_url`)
 - Runtime
 - Release Date
-- Additional Metadata
+- TMDb Vote Average
+- IMDb ID
+
+For the Kaggle Movies Dataset, copy `movies_metadata.csv` into `archive/ml-latest-small/` or set `DATA_DIR` to a directory containing both MovieLens CSVs and that metadata file. Poster paths are expanded with `https://image.tmdb.org/t/p/w500` by default; override with `TMDB_IMAGE_BASE_URL` if needed.
+
+If metadata CSV poster/overview values are missing, recommendation and popularity API responses also use a best-effort Wikipedia fallback by movie title. This fallback calls the Wikipedia API for only the returned movies, fills missing `overview`, `poster_path`, and `poster_url`, and adds `wikipedia_title` / `wikipedia_url`. Disable it with:
+
+```
+ENABLE_WIKIPEDIA_ENRICHMENT=false
+```
 
 ---
 

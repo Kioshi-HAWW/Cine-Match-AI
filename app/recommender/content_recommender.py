@@ -15,6 +15,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from app.preprocessing.feature_engineering import create_content_column
 from app.preprocessing.load_data import load_movielens_data
+from app.preprocessing.metadata import load_enriched_movielens_movies, normalize_json_text
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "archive" / "ml-latest-small"
 DEFAULT_MODEL_DIR = Path(__file__).resolve().parents[2] / "trained_models"
@@ -25,6 +26,7 @@ DEFAULT_MIN_MATCH_SCORE = 50
 class MovieRecommendation:
     title: str
     genres: str
+    overview: str
     poster_path: Optional[str]
     similarity_score: float
 
@@ -45,6 +47,7 @@ class ContentRecommender:
 
         self._validate_data_dir()
         self.movielens_data = load_movielens_data(self.data_dir)
+        self.metadata_path = Path(metadata_path) if metadata_path is not None else None
         self.metadata = self._load_optional_metadata(metadata_path)
         self.movie_meta = self._build_movie_metadata()
         self.movie_titles = self.movie_meta["title"].astype(str).tolist()
@@ -84,68 +87,15 @@ class ContentRecommender:
 
     @staticmethod
     def _normalize_json_text(value: Any) -> str:
-        if pd.isna(value):
-            return ""
-
-        if isinstance(value, str):
-            value = value.strip()
-            if value.startswith("["):
-                try:
-                    parsed = json.loads(value)
-                except json.JSONDecodeError:
-                    return value.lower()
-
-                tokens: List[str] = []
-                for item in parsed:
-                    if isinstance(item, dict):
-                        name = item.get("name") or item.get("keyword") or item.get("title")
-                        if name:
-                            tokens.append(str(name).strip().lower())
-                    elif isinstance(item, str):
-                        tokens.append(item.strip().lower())
-                return " ".join(sorted({token for token in tokens if token}))
-
-            return value.lower()
-
-        return str(value).lower()
+        return normalize_json_text(value).lower()
 
     def _build_movie_metadata(self) -> pd.DataFrame:
-        movies = self.movielens_data["movies"].copy()
-        movies["genres"] = movies.get("genres", "").fillna("").astype(str)
-        movies["title"] = movies["title"].fillna("").astype(str)
-
-        if not self.metadata.empty and "links" in self.movielens_data:
-            links = self.movielens_data["links"].copy()
-            links["tmdbId"] = pd.to_numeric(links["tmdbId"], errors="coerce")
-            movies = movies.merge(links[["movieId", "tmdbId"]], on="movieId", how="left")
-            movies = movies.merge(
-                self.metadata[
-                    ["tmdbId", "overview", "keywords", "poster_path", "genres", "director", "cast"]
-                ],
-                on="tmdbId",
-                how="left",
-                suffixes=("", "_meta"),
-            )
-
-            movies["poster_path"] = movies.get("poster_path", "").fillna("").astype(str)
-            movies["overview"] = movies.get("overview", "").fillna("").astype(str)
-            movies["keywords"] = movies.get("keywords", "").fillna("").astype(str)
-            movies["director"] = movies.get("director", "").fillna("").astype(str)
-            movies["cast"] = movies.get("cast", "").fillna("").astype(str)
-            movies["genres"] = movies["genres_meta"].fillna(movies["genres"]) if "genres_meta" in movies.columns else movies["genres"]
-
-            for extra_column in ["genres_meta"]:
-                if extra_column in movies.columns:
-                    movies.drop(columns=[extra_column], inplace=True)
-        else:
-            movies["poster_path"] = None
-            movies["overview"] = ""
-            movies["keywords"] = ""
-            movies["director"] = ""
-            movies["cast"] = ""
-
-        movies["content"] = create_content_column(movies)["content"].fillna("")
-        movies["poster_path"] = movies["poster_path"].replace({"": None})
+        movies = load_enriched_movielens_movies(self.data_dir, self.metadata_path if hasattr(self, "metadata_path") else None)
+        for column in ["overview", "poster_path", "keywords", "director", "cast"]:
+            if column not in movies.columns:
+                movies[column] = ""
+        movies["poster_path"] = movies["poster_path"].where(movies["poster_path"].notna(), None)
+        movies["content"] = create_content_column(movies).get("content", "").fillna("")
         return movies.reset_index(drop=True)
 
     def _build_model(self) -> tuple[TfidfVectorizer, Optional[np.ndarray]]:
@@ -225,6 +175,7 @@ class ContentRecommender:
                 MovieRecommendation(
                     title=str(row["title"]),
                     genres=str(row.get("genres", "") or ""),
+                    overview=str(row.get("overview", "") or ""),
                     poster_path=row.get("poster_path") if pd.notna(row.get("poster_path")) else None,
                     similarity_score=float(similarity_row[index]),
                 )

@@ -4,6 +4,13 @@ export interface MovieItem {
   genres: string
   overview: string
   poster_path?: string | null
+  poster_url?: string | null
+  runtime?: number | null
+  release_date?: string | null
+  vote_average?: number | null
+  imdb_id?: string | null
+  wikipedia_title?: string | null
+  wikipedia_url?: string | null
 }
 
 export interface PopularMovie extends MovieItem {

@@ -11,7 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from app.preprocessing.feature_engineering import create_content_column
-from app.preprocessing.load_data import load_movielens_data
+from app.preprocessing.metadata import load_enriched_movielens_movies, normalize_json_text
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "archive" / "ml-latest-small"
 
@@ -54,56 +54,13 @@ class InterestRecommender:
         return str(value).strip().lower()
 
     def _build_movie_metadata(self) -> pd.DataFrame:
-        data = load_movielens_data(self.data_dir)
-        movies = data["movies"].copy()
-        movies["title"] = movies["title"].fillna("").astype(str)
-        movies["genres"] = movies["genres"].fillna("").astype(str)
-
-        if self.metadata_path is not None:
-            metadata = pd.read_csv(self.metadata_path, low_memory=False)
-            if "tmdbId" not in metadata.columns and "tmdb_id" in metadata.columns:
-                metadata["tmdbId"] = pd.to_numeric(metadata["tmdb_id"], errors="coerce")
-            else:
-                metadata["tmdbId"] = pd.to_numeric(metadata.get("tmdbId", pd.Series(dtype="object")), errors="coerce")
-
-            if "overview" in metadata.columns:
-                metadata["overview"] = metadata["overview"].fillna("").astype(str)
-            else:
-                metadata["overview"] = ""
-
-            if "genres" in metadata.columns:
-                metadata["genres"] = metadata["genres"].fillna("").astype(str)
-            else:
-                metadata["genres"] = ""
-
-            if "overview" in metadata.columns:
-                metadata["overview"] = metadata["overview"].apply(self._normalize_json_text)
-            if "genres" in metadata.columns:
-                metadata["genres"] = metadata["genres"].apply(self._normalize_json_text)
-
-            links = data.get("links", pd.DataFrame())
-            if not links.empty and "tmdbId" in links.columns:
-                links = links.copy()
-                links["tmdbId"] = pd.to_numeric(links["tmdbId"], errors="coerce")
-                enrichment = links.merge(
-                    metadata[["tmdbId", "overview", "genres"]],
-                    on="tmdbId",
-                    how="left",
-                )
-                movies = movies.merge(
-                    enrichment[["movieId", "overview", "genres"]],
-                    on="movieId",
-                    how="left",
-                    suffixes=("", "_meta"),
-                )
-                movies["overview"] = movies["overview_meta"].fillna(movies.get("overview", ""))
-                movies["genres"] = movies["genres_meta"].fillna(movies["genres"])
-                movies.drop(columns=[col for col in movies.columns if col.endswith("_meta")], inplace=True)
-
+        movies = load_enriched_movielens_movies(self.data_dir, self.metadata_path)
         movies["overview"] = movies.get("overview", "").fillna("").astype(str)
         movies["genres"] = movies.get("genres", "").fillna("").astype(str)
+        movies["poster_path"] = movies.get("poster_path", None)
+        movies["poster_url"] = movies.get("poster_url", movies["poster_path"])
         movies["content"] = create_content_column(movies[["movieId", "title", "genres", "overview"]])["content"].fillna("")
-        return movies[["movieId", "title", "genres", "overview", "content"]].reset_index(drop=True)
+        return movies.reset_index(drop=True)
 
     def recommend(self, interest: str, top_n: int = 10) -> List[Dict[str, Any]]:
         interest_text = str(interest or "").strip()
@@ -121,6 +78,12 @@ class InterestRecommender:
                     "title": str(self.movies.at[index, "title"]),
                     "genres": str(self.movies.at[index, "genres"]),
                     "overview": str(self.movies.at[index, "overview"]),
+                    "poster_path": self.movies.at[index, "poster_path"] if pd.notna(self.movies.at[index, "poster_path"]) else None,
+                    "poster_url": self.movies.at[index, "poster_url"] if pd.notna(self.movies.at[index, "poster_url"]) else None,
+                    "runtime": float(self.movies.at[index, "runtime"]) if "runtime" in self.movies.columns and pd.notna(self.movies.at[index, "runtime"]) else None,
+                    "release_date": str(self.movies.at[index, "release_date"]) if "release_date" in self.movies.columns else "",
+                    "vote_average": float(self.movies.at[index, "vote_average"]) if "vote_average" in self.movies.columns and pd.notna(self.movies.at[index, "vote_average"]) else None,
+                    "imdb_id": str(self.movies.at[index, "imdb_id"]) if "imdb_id" in self.movies.columns else "",
                     "similarity_score": float(scores[index]),
                 }
             )

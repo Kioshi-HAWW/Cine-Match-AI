@@ -13,6 +13,7 @@ from surprise import KNNBasic, NMF, SVD
 
 from app.preprocessing.feature_engineering import create_content_column
 from app.preprocessing.load_data import load_movielens_data
+from app.preprocessing.metadata import load_enriched_movielens_movies
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "archive" / "ml-latest-small"
 DEFAULT_MODEL_DIR = Path(__file__).resolve().parents[2] / "trained_models"
@@ -76,12 +77,12 @@ class HybridRecommender:
         return metadata
 
     def _build_movie_metadata(self) -> pd.DataFrame:
-        movies = load_movielens_data(self.data_dir)["movies"].copy()
+        movies = load_enriched_movielens_movies(self.data_dir).copy()
         movies["title"] = movies["title"].fillna("").astype(str)
         movies["genres"] = movies["genres"].fillna("").astype(str)
         movies["overview"] = movies.get("overview", "").fillna("").astype(str)
         movies["content"] = create_content_column(movies[["movieId", "title", "genres", "overview"]])["content"].fillna("")
-        return movies[["movieId", "title", "genres", "overview", "content"]].reset_index(drop=True)
+        return movies.reset_index(drop=True)
 
     def _build_content_model(self) -> Tuple[TfidfVectorizer, np.ndarray]:
         vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), max_features=self.max_features)
@@ -163,6 +164,12 @@ class HybridRecommender:
                 "title": row["title"],
                 "genres": row["genres"],
                 "overview": row["overview"],
+                "poster_path": row.get("poster_path") if pd.notna(row.get("poster_path")) else None,
+                "poster_url": row.get("poster_url") if pd.notna(row.get("poster_url")) else None,
+                "runtime": float(row["runtime"]) if pd.notna(row.get("runtime")) else None,
+                "release_date": str(row.get("release_date", "") or ""),
+                "vote_average": float(row["vote_average"]) if pd.notna(row.get("vote_average")) else None,
+                "imdb_id": str(row.get("imdb_id", "") or ""),
                 "content_score": float(row["content_score"]),
                 "collaborative_score": float(row["collaborative_score"]),
                 "popularity_score": float(row["popularity_score"]),
