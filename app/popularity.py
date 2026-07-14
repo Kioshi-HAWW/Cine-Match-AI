@@ -8,13 +8,14 @@ import numpy as np
 import pandas as pd
 
 from app.preprocessing.load_data import load_movielens_data
+from app.preprocessing.metadata import load_enriched_movielens_movies
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "archive" / "ml-latest-small"
 
 
 def _load_movie_and_rating_data(data_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
     data = load_movielens_data(data_dir)
-    movies = data["movies"].copy()
+    movies = load_enriched_movielens_movies(data_dir).copy()
     ratings = data["ratings"].copy()
 
     movies["title"] = movies["title"].fillna("").astype(str)
@@ -102,7 +103,7 @@ def top_rated_movies(popularity: pd.DataFrame, top_n: int = 10) -> List[Dict[str
     )
     return _prepare_film_records(
         selected,
-        ["movieId", "title", "genres", "overview", "weighted_rating", "average_rating", "rating_count"],
+        ["movieId", "title", "genres", "overview", "poster_path", "poster_url", "runtime", "release_date", "vote_average", "imdb_id", "weighted_rating", "average_rating", "rating_count"],
     )
 
 
@@ -120,7 +121,7 @@ def trending_movies(
     merged["trending_score"] = merged["trending_score"].fillna(0.0)
     return _prepare_film_records(
         merged.sort_values(["trending_score", "rating_count"], ascending=[False, False]).head(top_n),
-        ["movieId", "title", "genres", "overview", "trending_score", "average_rating", "rating_count"],
+        ["movieId", "title", "genres", "overview", "poster_path", "poster_url", "runtime", "release_date", "vote_average", "imdb_id", "trending_score", "average_rating", "rating_count"],
     )
 
 
@@ -128,7 +129,7 @@ def most_rated_movies(popularity: pd.DataFrame, top_n: int = 10) -> List[Dict[st
     selected = popularity.sort_values("rating_count", ascending=False).head(top_n)
     return _prepare_film_records(
         selected,
-        ["movieId", "title", "genres", "overview", "average_rating", "rating_count"],
+        ["movieId", "title", "genres", "overview", "poster_path", "poster_url", "runtime", "release_date", "vote_average", "imdb_id", "average_rating", "rating_count"],
     )
 
 

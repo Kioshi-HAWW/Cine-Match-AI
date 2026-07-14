@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.popularity import calculate_popularity_scores, most_rated_movies, top_rated_movies, trending_movies
 from app.preprocessing.load_data import load_movielens_data
+from app.preprocessing.metadata import load_enriched_movielens_movies
 from app.recommender import ContentRecommender, HybridRecommender, InterestRecommender
 from app.api.schemas import (
     GenreSchema,
@@ -35,7 +36,7 @@ router = APIRouter(prefix="", tags=["movies"])
 
 
 def _load_movies() -> pd.DataFrame:
-    movies = load_movielens_data(DEFAULT_DATA_DIR)["movies"].copy()
+    movies = load_enriched_movielens_movies(DEFAULT_DATA_DIR).copy()
     movies["title"] = movies["title"].fillna("").astype(str)
     movies["genres"] = movies["genres"].fillna("").astype(str)
     if "overview" not in movies.columns:
@@ -51,7 +52,12 @@ def _movie_to_dict(row: pd.Series) -> Dict[str, Any]:
         "title": str(row["title"]),
         "genres": str(row.get("genres", "") or ""),
         "overview": str(row.get("overview", "") or ""),
-        "poster_path": None,
+        "poster_path": row.get("poster_path") if pd.notna(row.get("poster_path")) else None,
+        "poster_url": row.get("poster_url") if pd.notna(row.get("poster_url")) else None,
+        "runtime": float(row["runtime"]) if pd.notna(row.get("runtime")) else None,
+        "release_date": str(row.get("release_date", "") or ""),
+        "vote_average": float(row["vote_average"]) if pd.notna(row.get("vote_average")) else None,
+        "imdb_id": str(row.get("imdb_id", "") or ""),
     }
 
 
@@ -121,8 +127,9 @@ def recommend_movie(request: RecommendMovieRequest) -> RecommendationResponse:
             {
                 "title": rec.title,
                 "genres": rec.genres,
-                "overview": None,
+                "overview": rec.overview,
                 "poster_path": rec.poster_path,
+                "poster_url": rec.poster_path,
                 "similarity_score": rec.similarity_score,
             }
             for rec in movies
@@ -150,7 +157,8 @@ def recommend_interest(request: RecommendInterestRequest) -> RecommendationRespo
             "title": movie["title"],
             "genres": movie["genres"],
             "overview": movie.get("overview", ""),
-            "poster_path": None,
+            "poster_path": movie.get("poster_path"),
+            "poster_url": movie.get("poster_url") or movie.get("poster_path"),
             "similarity_score": movie.get("similarity_score"),
         }
         for movie in movies
@@ -193,7 +201,12 @@ def recommend_user(request: RecommendUserRequest) -> RecommendationResponse:
                 "title": str(row["title"]),
                 "genres": str(row.get("genres", "") or ""),
                 "overview": str(row.get("overview", "") or ""),
-                "poster_path": None,
+                "poster_path": row.get("poster_path") if pd.notna(row.get("poster_path")) else None,
+                "poster_url": row.get("poster_url") if pd.notna(row.get("poster_url")) else None,
+                "runtime": float(row["runtime"]) if pd.notna(row.get("runtime")) else None,
+                "release_date": str(row.get("release_date", "") or ""),
+                "vote_average": float(row["vote_average"]) if pd.notna(row.get("vote_average")) else None,
+                "imdb_id": str(row.get("imdb_id", "") or ""),
                 "predicted_rating": score,
             }
         )
