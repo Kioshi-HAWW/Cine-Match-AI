@@ -5,9 +5,18 @@ export default function MovieCard({ movie }: { movie: PopularMovie }) {
     <article className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-slate-950/20">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         <div className="min-w-[150px] overflow-hidden rounded-3xl bg-slate-800">
-          <div className="aspect-[2/3] bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 p-4">
-            <div className="h-full w-full rounded-2xl bg-slate-950" />
-          </div>
+          {movie.poster_url || movie.poster_path ? (
+            <img
+              src={movie.poster_url || movie.poster_path || ''}
+              alt={`${movie.title} poster`}
+              className="aspect-[2/3] w-[150px] object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="aspect-[2/3] w-[150px] bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 p-4">
+              <div className="h-full w-full rounded-2xl bg-slate-950" />
+            </div>
+          )}
         </div>
         <div className="flex-1 space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -19,6 +28,11 @@ export default function MovieCard({ movie }: { movie: PopularMovie }) {
             ) : null}
           </div>
           <p className="text-sm leading-6 text-slate-300">{movie.overview || 'No overview available.'}</p>
+          <div className="flex flex-wrap gap-3 text-xs text-slate-400">
+            {movie.release_date ? <span>Released {movie.release_date}</span> : null}
+            {movie.runtime ? <span>{Math.round(movie.runtime)} min</span> : null}
+            {movie.imdb_id ? <span>IMDb {movie.imdb_id}</span> : null}
+          </div>
           <div className="flex flex-wrap gap-2">
             {movie.genres?.split('|').map(genre =>
               genre ? (
